@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trading Interface</title>
+  <style>
+    /* Simple inline styles to make the page usable without external CSS */
+    body { font-family: Arial, sans-serif; margin: 2rem; }
+    h1 { margin-bottom: 0.5rem; }
+    h2 { margin-top: 1.5rem; }
+    ul { list-style-type: disc; margin-left: 1.5rem; }
+    pre { background: #f5f5f5; padding: 1rem; border-radius: 4px; }
+    form { margin-top: 1rem; }
+    label { display: block; margin-bottom: 0.5rem; }
+    input[type="password"] { padding: 0.5rem; }
+    button { padding: 0.5rem 1rem; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <h1>Trading Interface</h1>
+  <h2>Features</h2>
+  <ul>
+    {% for feat in features %}
+    <li>{{ feat }}</li>
+    {% endfor %}
+  </ul>
+
+  <h2>Account Info ({{ 'Virtual' if virtual else 'Real' }})</h2>
+  <pre>{{ account_info | tojson(indent=2) }}</pre>
+
+  <!-- Mode switch form. Requires password when switching modes. -->
+  <form action="/switch" method="post">
+    <label>
+      비밀번호 입력하여 모드 전환:
+      <input type="password" name="password" required>
+    </label>
+    <button type="submit">모드 전환</button>
+  </form>
+
+  <!-- Reset log (virtual mode only) -->
+  <form action="/reset" method="post">
+    <button type="submit">로그 리셋</button>
+  </form>
+
+  <!-- Stop trading; always allowed -->
+  <form action="/stop" method="post">
+    <button type="submit">거래 중단</button>
+  </form>
+</body>
+</html>
