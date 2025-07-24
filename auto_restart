@@ -1,0 +1,63 @@
+"""
+auto_restart.py
+================
+
+This utility ensures that the web service stays alive by monitoring the
+process and restarting it whenever it exits. The script repeatedly
+launches a FastAPI server and restarts it after a configurable delay
+when it terminates unexpectedly. The listening port is read from
+``config.json`` to remain consistent with other components of the system.
+
+Run this script in a supervisor (e.g. a cron job or dedicated process) so
+that it can respawn the server if it crashes. Keeping the logic here
+simple makes it portable across environments without requiring external
+service managers like systemd. When integrated into production a proper
+process manager should be used instead.
+"""
+
+import json
+import subprocess
+import time
+from typing import Dict
+
+
+def load_config(config_path: str = "config.json") -> Dict:
+    """Load configuration from the provided JSON file."""
+    with open(config_path, "r", encoding="utf-8") as cf:
+        return json.load(cf)
+
+
+def start_server(port: int) -> subprocess.Popen:
+    """Spawn the FastAPI server on the given port.
+
+    The server is launched using ``uvicorn`` which must be installed in the
+    runtime environment. The return value is a ``Popen`` instance which
+    permits monitoring of the child process.
+    """
+    # The application is defined in web_interface.py as the global ``app``.
+    cmd = [
+        "uvicorn",
+        "web_interface:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        str(port),
+    ]
+    return subprocess.Popen(cmd)
+
+
+def main() -> None:
+    cfg = load_config()
+    port = int(cfg.get("port", 8000))
+    # Delay between restarts to avoid tight crash loops.
+    delay = 5
+    while True:
+        process = start_server(port)
+        # Wait until the server process exits (blocking call).
+        process.wait()
+        # Sleep before attempting to restart to prevent rapid respawns.
+        time.sleep(delay)
+
+
+if __name__ == "__main__":
+    main()
